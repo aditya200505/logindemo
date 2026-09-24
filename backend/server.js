@@ -9,13 +9,33 @@ import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 
 const backendDirectory = path.dirname(fileURLToPath(import.meta.url));
-dotenv.config({ path: path.join(backendDirectory, ".env") });
+dotenv.config({ path: path.join(backendDirectory, ".env"), override: true });
 
 const app = express();
 const port = process.env.PORT || 5000;
+const allowedOrigins = new Set([
+    process.env.FRONTEND_URL || "http://localhost:5173",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173"
+]);
+
+const isLocalFrontend = (origin) => {
+    try {
+        const url = new URL(origin);
+        return ["localhost", "127.0.0.1"].includes(url.hostname) && url.port !== "";
+    } catch {
+        return false;
+    }
+};
 
 app.use(cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.has(origin) || isLocalFrontend(origin)) {
+            return callback(null, true);
+        }
+
+        return callback(new Error("Origin is not allowed by the API"));
+    },
     credentials: true
 }));
 app.use(express.json());

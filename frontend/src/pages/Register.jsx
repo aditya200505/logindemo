@@ -12,8 +12,7 @@ export default function Register({ onSuccess, onLogin }) {
     setLoading(true);
     try {
       await request("/register", { method: "POST", body: JSON.stringify(form) });
-      await request("/login", { method: "POST", body: JSON.stringify(form) });
-      onSuccess();
+      onSuccess(form.email.trim().toLowerCase());
     } catch (requestError) {
       setError(requestError.message);
     } finally {
